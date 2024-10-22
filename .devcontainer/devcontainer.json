@@ -1,0 +1,20 @@
+{
+    "name": "Arquitectura-Nube-G2",
+    "dockerComposeFile": "../docker/docker-compose.yml",
+    // "dockerFile": "../docker/Dockerfile",
+    "service": "terraform",
+    "workspaceFolder": "/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "eamodio.gitlens",
+                "hashicorp.terraform",
+                "ms-azuretools.vscode-azureterraform",
+                "devadvice.serverlessconsole",
+                "4ops.terraform",
+                "matheusq94.TFS",
+                "rangav.vscode-thunder-client"
+            ]
+        }
+    }
+}

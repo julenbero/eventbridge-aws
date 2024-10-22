@@ -1,0 +1,26 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    software-properties-common \
+    gnupg2 \
+    apt-transport-https \
+    lsb-release \
+    ca-certificates \
+    awscli \
+    iputils-ping \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Instalar Terraform
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - && \
+    apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" && \
+    apt-get update && apt-get install -y terraform
+
+# Crear el directorio de trabajo (workspace)
+WORKDIR /workspace
+
+# Comando por defecto
+CMD ["tail", "-f", "/dev/null"]

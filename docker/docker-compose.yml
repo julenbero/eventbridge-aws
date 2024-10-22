@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  terraform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: terraform
+    volumes:
+      - ../:/workspace
+      - ../.aws:/root/.aws
+    working_dir: /workspace
+    depends_on:
+      - localstack
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_SESSION_TOKEN=test
+      - AWS_REGION=us-east-1
+      - LOCALSTACK_HOSTNAME=localstack
+    networks:
+      - localstack-network
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "0.0.0.0:4566:4566"
+      - "0.0.0.0:4510-4559:4510-4559"
+    environment:
+      - SERVICES=sts,iam,lambda,events,apigateway,logs
+      - DEBUG=1
+      - DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_SESSION_TOKEN=test
+    networks:
+      - localstack-network
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+networks:
+  localstack-network:
+    driver: bridge
