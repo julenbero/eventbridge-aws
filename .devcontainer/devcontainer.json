@@ -1,6 +1,6 @@
 {
     "name": "Arquitectura-Nube-G2",
-    //"dockerComposeFile": "../docker/docker-compose.yml",
+    // "dockerComposeFile": "../docker/docker-compose.yml",
     "dockerFile": "../docker/Dockerfile",
     "service": "terraform",
     // "workspaceFolder": "/workspace",

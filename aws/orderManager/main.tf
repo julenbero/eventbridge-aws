@@ -109,35 +109,22 @@ resource "aws_cognito_user_pool" "order_user_pool" {
 }
 
 resource "aws_cognito_user_pool_client" "order_user_pool_client" {
-  name            = "OrderAPIAppClient"
-  user_pool_id    = aws_cognito_user_pool.order_user_pool.id
-  generate_secret = false
-  explicit_auth_flows = [
-    "ALLOW_REFRESH_TOKEN_AUTH",
-    "ALLOW_USER_PASSWORD_AUTH"
-  ]
+  name                                 = "OrderAPIAppClient"
+  user_pool_id                         = aws_cognito_user_pool.order_user_pool.id
+  generate_secret                      = false
+  allowed_oauth_scopes                 = ["aws.cognito.signin.user.admin", "email", "openid", "profile"]
+  allowed_oauth_flows                  = ["implicit", "code"]
+  explicit_auth_flows                  = ["ADMIN_NO_SRP_AUTH", "USER_PASSWORD_AUTH"]
+  allowed_oauth_flows_user_pool_client = true
+  supported_identity_providers         = ["COGNITO"]
+  callback_urls                        = ["https://example.com"]
+  logout_urls                          = ["https://example.com"]
 }
 
-resource "null_resource" "create_default_user" {
-  provisioner "local-exec" {
-    command = <<EOT
-      aws cognito-idp admin-create-user \
-        --user-pool-id ${aws_cognito_user_pool.order_user_pool.id} \
-        --username default_user \
-        --user-attributes Name=email,Value=default@example.com \
-        --temporary-password "TemporaryPass123!" \
-        --message-action SUPPRESS
-    EOT
-  }
-  depends_on = [
-    aws_cognito_user_pool.order_user_pool,
-    aws_cognito_user_pool_client.order_user_pool_client
-  ]
-}
-
-resource "aws_cognito_user_pool_domain" "order_user_pool_domain" {
-  domain       = "secure-order-api"
+resource "aws_cognito_user" "example" {
   user_pool_id = aws_cognito_user_pool.order_user_pool.id
+  username     = "default_user"
+  password     = "TemporaryPass123!"
 }
 
 resource "aws_api_gateway_rest_api" "OrderAPI" {
@@ -152,11 +139,10 @@ resource "aws_api_gateway_resource" "order_resource" {
 }
 
 resource "aws_api_gateway_authorizer" "cognito_authorizer" {
-  name            = "CognitoAuthorizer"
-  rest_api_id     = aws_api_gateway_rest_api.OrderAPI.id
-  type            = "COGNITO_USER_POOLS"
-  identity_source = "method.request.header.Authorization"
-  provider_arns   = [aws_cognito_user_pool.order_user_pool.arn]
+  name          = "CognitoAuthorizer"
+  rest_api_id   = aws_api_gateway_rest_api.OrderAPI.id
+  type          = "COGNITO_USER_POOLS"
+  provider_arns = [aws_cognito_user_pool.order_user_pool.arn]
 }
 
 resource "aws_api_gateway_method" "post_order" {
@@ -206,15 +192,4 @@ output "TestingAPI" {
 output "CognitoClientId" {
   description = "ID del App Client de Cognito para autenticación"
   value       = aws_cognito_user_pool_client.order_user_pool_client.id
-}
-
-output "CognitoDomain" {
-  description = "Dominio de autenticación para el grupo de usuarios"
-  value       = aws_cognito_user_pool_domain.order_user_pool_domain.domain
-}
-
-output "CognitoClientSecret" {
-  description = "Client secret para OrderAPIAppClient"
-  value       = aws_cognito_user_pool_client.order_user_pool_client.client_secret
-  sensitive   = true
 }
